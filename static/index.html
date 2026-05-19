@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MD Link</title>
+  <style>
+    body {
+      font-family: monospace;
+      max-width: 700px;
+      margin: 60px auto;
+      padding: 0 1rem;
+      background: #1a1a1a;
+      color: #e0e0e0;
+    }
+    h1 { font-size: 1.2rem; color: #aaa; margin-bottom: 1.5rem; }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.6rem;
+      font-size: 0.95rem;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #e0e0e0;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.2rem;
+      background: #336699;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    button:hover { background: #4477aa; }
+    #output, #output-discord {
+      margin-top: 1.5rem;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 0.8rem;
+      word-break: break-all;
+      white-space: pre-wrap;
+      min-height: 2.5rem;
+      font-size: 0.95rem;
+    }
+    #copy-btn { background: #3a6644; }
+    #copy-btn:hover { background: #4a7754; }
+    #status { font-size: 0.8rem; color: #888; margin-top: 0.4rem; }
+  </style>
+</head>
+<body>
+  <h1>→ markdown link</h1>
+  <input type="text" id="url-input" placeholder="https://..." />
+  <br>
+  <button onclick="fetchLink()">Fetch</button>
+  <p style="color:#888; font-size:0.8rem; margin-bottom:0.2rem">Markdown</p>
+  <div id="output"></div>
+  <button onclick="copyResult('output')" style="margin-top:0.4rem; background:#3a6644">Copy</button>
+
+  <p style="color:#888; font-size:0.8rem; margin-top:1.2rem; margin-bottom:0.2rem">For Discord</p>
+  <div id="output-discord"></div>
+  <button onclick="copyResult('output-discord')" style="margin-top:0.4rem; background:#3a6644">Copy</button>
+
+  <div id="status"></div>
+
+  <script>
+    const input = document.getElementById('url-input');
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') fetchLink();
+    });
+
+    async function fetchLink() {
+      const url = input.value.trim();
+      if (!url) return;
+      document.getElementById('status').textContent = 'Fetching...';
+      document.getElementById('output').textContent = '';
+      try {
+        const resp = await fetch('/api/fetch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || 'Error');
+        document.getElementById('output').textContent = data.markdown;
+        document.getElementById('output-discord').textContent = data.discord;
+        document.getElementById('status').textContent = '';
+      } catch (err) {
+        document.getElementById('status').textContent = '✗ ' + err.message;
+      }
+    }
+
+    async function copyResult(id) {
+      const text = document.getElementById(id).textContent;
+      if (!text) return;
+      await navigator.clipboard.writeText(text);
+      document.getElementById('status').textContent = 'Copied.';
+      setTimeout(() => document.getElementById('status').textContent = '', 1500);
+    }
+  </script>
+</body>
+</html>

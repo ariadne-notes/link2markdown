@@ -1,0 +1,10 @@
+services:
+  link2markdown:
+    build:
+      context: https://github.com/ariadne-notes/link2markdown.git
+    container_name: link2markdown
+    restart: unless-stopped
+    volumes:
+      - /etc/ssl/certs:/etc/ssl/certs:ro
+    ports:
+      - "8000:8000"
